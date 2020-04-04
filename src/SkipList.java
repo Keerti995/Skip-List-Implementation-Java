@@ -1,4 +1,5 @@
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 // Skeleton for skip list implementation.
@@ -49,7 +50,7 @@ public class SkipList<T extends Comparable<? super T>> {
         if(contains(x)) //if already contains then return false else populate the last nodes visited in last array
             return false;
         int level = chooseLevel();
-        Entry<T> ent = new Entry<T>(x,level);
+        Entry<T> ent = new Entry<>(x,level);
         for(int i=0;i<level;i++){
             ent.next[i] = last[i].next[i];
             last[i].next[i] = ent;
@@ -68,7 +69,7 @@ public class SkipList<T extends Comparable<? super T>> {
     public void find(T x){
         Entry<T> p = head;
         for(int i=possibleLevels-1; i>=0 ; i--){
-            while((p.next[i].element != null) && p.next[i].element.compareTo(x) < 0){
+            while((p.next[i].element != null) && p.next[i].element.compareTo(x) < 0){  //if the next element is greater or equal then exit and add to last[i]
                 p = p.next[i];
             }
             last[i] = p;
@@ -82,22 +83,31 @@ public class SkipList<T extends Comparable<? super T>> {
 
     // Return first element of list
     public T first() {
-        return null;
+        return (T) head.next[0].element;
     }
 
     // Find largest element that is less than or equal to x
     public T floor(T x) {
-        return null;
+        find(x);
+        if(last[0].next[0].element.compareTo(x)==0) //if the next ele == x then return that else the floor
+            return x;
+        else
+        return last[0].element;
     }
 
     // Return element at index n of list.  First element is at index 0.
     public T get(int n) {
-        return null;
+        return getLinear(n);
     }
 
     // O(n) algorithm for get(n)
     public T getLinear(int n) {
-        return null;
+        if(n<0 || n>size-1)
+            throw new NoSuchElementException();
+        Entry<T> p = head;
+        for(int i=0;i<n;i++)
+            p = p.next[0];
+        return p.element;
     }
 
     // Optional operation: Eligible for EC.
@@ -108,29 +118,59 @@ public class SkipList<T extends Comparable<? super T>> {
 
     // Is the list empty?
     public boolean isEmpty() {
-        return false;
+        return size==0 ? true : false;
     }
 
     // Iterate through the elements of list in sorted order
+    // Iterate through the elements of list in sorted order
     public Iterator<T> iterator() {
-        return null;
+        return new SLIterator();
+    }
+
+    protected class SLIterator implements Iterator<T> {
+        Entry<T> cursor;
+
+        SLIterator() {
+            cursor = head;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return cursor.next[0] != tail;
+        }
+
+        @Override
+        public T next() {
+            cursor = cursor.next[0];
+            return cursor.element;
+        }
     }
 
     // Return last element of list
     public T last() {
-        return null;
+        return (T) tail.prev.element;
     }
 
-
-    // Not a standard operation in skip lists. 
+    // Optional operation: Reorganize the elements of the list into a perfect skip list
+    // Not a standard operation in skip lists. Eligible for EC.
     public void rebuild() {
 
     }
 
     // Remove x from list.  Removed element is returned. Return null if x not in list
     public T remove(T x) {
-        return null;
+        if(!contains(x))
+            return null;
+        Entry<T> ent = last[0].next[0];
+
+        for(int i= 0; i < ent.next.length; i++){
+            last[i].next[i] = ent.next[i];
+        }
+        size--;
+
+        return ent.element;
     }
+
     public void printList() {
 
         Entry node = head.next[0];
@@ -149,11 +189,6 @@ public class SkipList<T extends Comparable<? super T>> {
         System.out.println("----------END----------");
     }
 
-
-    // Return the number of elements in the list
-    public int size() {
-        return 0;
-    }
     public static void main(String[] args) {
         SkipList<Long> sl = new SkipList<>();
 
